@@ -19,4 +19,4 @@ extend:
       - authorative_servers: {{ ntpinfo.authorative_servers }}
   states.ntp.iptables::params:
     stateconf.set:
-      - is_server: {{ ntpinfo.server|default(False) }}
+      - is_server: {{ pillar.applications.ntp.server|default(False) }}
