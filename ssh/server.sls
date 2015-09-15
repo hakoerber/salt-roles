@@ -3,8 +3,10 @@
 include:
   - states.ssh.server
   - states.ssh.server.conf
-  - states.ssh.server.iptables
   - states.ssh.server.keys
+{% if grains['os_family'] != 'FreeBSD' %}
+  - states.ssh.server.iptables
+{% endif %}
 
 extend:
   states.ssh.server.conf::params:
