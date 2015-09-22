@@ -4,6 +4,7 @@ include:
   - states.dhcpd
   - states.dhcpd.conf
   - states.dhcpd.iptables
+  - states.dhcpd.logging
 
 {% set network = pillar.network.get(pillar.applications.dhcp.network) %}
 {% set dhcpinfo = network.applications.dhcp %}

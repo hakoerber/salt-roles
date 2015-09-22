@@ -3,6 +3,7 @@
 include:
   - states.salt.minion
   - states.salt.minion.conf
+  - states.salt.minion.logging
 
 {% set master = 'salt' %}
 

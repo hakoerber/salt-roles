@@ -4,6 +4,7 @@ include:
   - states.ssh.server
   - states.ssh.server.conf
   - states.ssh.server.keys
+  - states.ssh.server.logging
 {% if grains['os_family'] != 'FreeBSD' %}
   - states.ssh.server.iptables
 {% endif %}

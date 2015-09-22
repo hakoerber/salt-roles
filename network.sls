@@ -1,5 +1,6 @@
 #!stateconf
 
+{% if grains['os_family'] != 'FreeBSD' %}
 include:
   - states.network
 
@@ -53,3 +54,4 @@ extend:
     stateconf.set:
       - hostname: {{ hostname }}
       - interfaces: {{ interfaces }}
+{% endif %}

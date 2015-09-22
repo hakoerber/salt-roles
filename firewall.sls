@@ -5,6 +5,7 @@ include:
   - states.iptables
   - states.iptables.conf
   - states.iptables.zones
+  - states.iptables.logging
 
 {# extract zones from all networks #}
 {% set zones = {

@@ -4,6 +4,7 @@ include:
   - states.ntp
   - states.ntp.conf
   - states.ntp.iptables
+  - states.ntp.logging
 
 {% set domain = pillar.applications.ntp.domain %}
 {% set ntpinfo = pillar.domain.get(domain).applications.get('ntp', {}) %}

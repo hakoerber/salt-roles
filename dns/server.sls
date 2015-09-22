@@ -4,6 +4,7 @@ include:
   - states.bind
   - states.bind.conf
   - states.bind.iptables
+  - states.bind.logging
 
 {% set domain = pillar.applications.dns.domain %}
 {% set domain_reverse = pillar.network.get(domain).domain_reverse %}
