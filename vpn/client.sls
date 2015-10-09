@@ -1,7 +1,7 @@
 #!py|stateconf -p
 
 def get_vpns():
-    vpns = {k: v for k, v in __pillar__['network'].items() if v.get('vpn')}
+    vpns = {k: v for k, v in __pillar__.get('network').items() if v.get('vpn')}
     for vpnname, vpn in vpns.items():
         vpn['devname'] = 'vpn-{}'.format(vpnname)
     return vpns
