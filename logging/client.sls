@@ -18,10 +18,7 @@ include:
 {% endfor %}
 {% endfor %}
 
-{% set local = pillar.applications.get('logging', {}).get('local', True) %}
-
 extend:
   states.rsyslog.conf.client::params:
     stateconf.set:
-      - local: {{ local }}
       - servers: {{ logservers }}
