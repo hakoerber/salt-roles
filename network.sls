@@ -45,6 +45,10 @@ def get_interfaces():
     return interfaces
 
 
+def get_ipv6():
+    return __pillar__.get('network', {}).get('ipv6', False)
+
+
 def run():
     config = dict()
     if __grains__['os_family'] == 'FreeBSD':
@@ -61,6 +65,7 @@ def run():
         'states.network::params': {
             'stateconf.set': [
                 {'hostname': get_hostname()},
+                {'ipv6': get_ipv6()},
                 {'interfaces': get_interfaces()}]
         },
     }
