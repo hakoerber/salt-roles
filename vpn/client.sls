@@ -15,6 +15,7 @@ def run():
         'states.openvpn.client.conf',
         'states.openvpn.client.pki',
         'states.openvpn.client.iptables',
+        'states.openvpn.client.logging',
     ]
 
     vpns = get_vpns()
@@ -30,6 +31,9 @@ def run():
             'stateconf.set': [{'vpns': vpns}]
         },
         'states.openvpn.client.iptables::params': {
+            'stateconf.set': [{'vpns': vpns}]
+        },
+        'states.openvpn.client.logging::params': {
             'stateconf.set': [{'vpns': vpns}]
         },
     }
