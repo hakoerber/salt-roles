@@ -5,6 +5,7 @@ include:
   - states.nginx.iptables
   - states.nginx.logging
   - states.nginx.conf
+  - states.nginx.logrotate
 
 {% set reverse_proxy = pillar.get('applications', {}).get('reverse_proxy', {}) %}
 {% set upstream = reverse_proxy.get('upstream', {}) %}

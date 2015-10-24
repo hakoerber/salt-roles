@@ -5,6 +5,7 @@ include:
   - states.rsyslog.conf
   - states.rsyslog.conf.client
   - states.rsyslog.conf.applications
+  - states.rsyslog.logrotate
 
 {% set logservers = [] %}
 

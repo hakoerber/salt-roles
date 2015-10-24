@@ -5,11 +5,11 @@ include:
   - states.bind.conf
   - states.bind.iptables
   - states.bind.logging
+  - states.bind.logrotate
 
 {% set domain = pillar.applications.dns.domain %}
 {% set domain_reverse = pillar.network.get(domain).domain_reverse %}
 {% set dnsinfo = pillar.domain.get(domain).applications.dns %}
-
 extend:
   states.bind.conf::params:
     stateconf.set:
