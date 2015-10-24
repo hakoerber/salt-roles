@@ -34,7 +34,7 @@ def get_interfaces():
 
         if interface['mode'] == 'static':
             netinfo = __pillar__['network'].get(domain, {})
-            netinfo = __pillar__['domain'].get(domain, {})
+            dominfo = __pillar__['domain'].get(domain, {})
 
             new_interface.update({
                 'address': interface['ip'],
@@ -56,10 +56,6 @@ def run():
     config['include'] = [
         'states.network',
     ]
-
-    hostname = get_hostname()
-
-    #vpns = get_vpns()
 
     config['extend'] = {
         'states.network::params': {
