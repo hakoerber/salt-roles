@@ -5,7 +5,9 @@ include:
   - states.iptables
   - states.iptables.conf
   - states.iptables.zones
+{% if 'roles.logging.client' in salt['state.show_top']().get(env) %}
   - states.iptables.logging
+{% endif %}
 
 {# extract zones from all networks #}
 {% set zones = {
