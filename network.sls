@@ -4,6 +4,9 @@ from salt.exceptions import SaltRenderError
 
 def get_hostname():
     non_vpns = {domain: net for domain, net in __pillar__.get('network', {}).items() if not net.get('vpn', False)}
+    primary_domain = None
+    if len(non_vpns) == 0:
+        raise SaltRenderError("No domain specified.")
     if len(non_vpns) == 1:
         primary_domain = non_vpns.keys()[0]
     else:
