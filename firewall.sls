@@ -20,7 +20,7 @@ include:
 
 {% set networks = pillar.get('interfaces', {}).keys() %}
 {% for network in networks %}
-{% set netdata = pillar.get('network', {}).get(network) %}
+{% set netdata = pillar.get('network', {}).get(network, {}) %}
 
 {# add an implicit "local" zone containing all networks with the "local"
 flag set #}
