@@ -36,10 +36,16 @@ def get_interfaces():
             netinfo = __pillar__['network'].get(domain, {})
             dominfo = __pillar__['domain'].get(domain, {})
 
+            if 'gateway' in interface:
+                gateway = interface['gateway']
+            else:
+                gateway= netinfo['default_gateway']
+
+
             new_interface.update({
                 'address': interface['ip'],
                 'netmask': netinfo['netmask'],
-                'gateway': netinfo['default_gateway'],
+                'gateway': gateway,
                 'nameservers': [nameserver['ip'] for nameserver in  dominfo['applications']['dns']['zoneinfo']['nameservers']]})
         interfaces.append(new_interface)
     return interfaces
