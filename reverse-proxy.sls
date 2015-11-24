@@ -16,7 +16,7 @@ extend:
   states.nginx.iptables::params:
     stateconf.set:
       - public: {{ public }}
-      - http: {{ 'http' in protocols }}
+      - http: True
       - https: {{ 'https' in protocols }}
   states.nginx.conf::params:
     stateconf.set:
