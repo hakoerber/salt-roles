@@ -1,4 +1,5 @@
 #!stateconf
+{% from 'roles/helpers/net.jinja' import localnets with context %}
 
 {% if grains['os_family'] != 'FreeBSD' %}
 include:
@@ -15,7 +16,7 @@ include:
       'sources': ['0.0.0.0/0'],
     },
     'local': {
-      'sources': [],
+      'sources': localnets,
     },
   }
 %}
@@ -23,12 +24,6 @@ include:
 {% set networks = pillar.get('interfaces', {}).keys() %}
 {% for network in networks %}
 {% set netdata = pillar.get('network', {}).get(network, {}) %}
-
-{# add an implicit "local" zone containing all networks with the "local"
-flag set #}
-{% if netdata.get('local', False) %}
-{% do zones.local.sources.append(netdata.ip + "/" + netdata.prefix) %}
-{% endif %}
 
 {# add explicit zones #}
 {% do zones.update(netdata.get('zones', {})) %}

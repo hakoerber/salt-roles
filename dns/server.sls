@@ -1,4 +1,5 @@
 #!stateconf
+{% from 'roles/helpers/net.jinja' import localnets with context %}
 
 include:
   - states.bind
@@ -22,7 +23,7 @@ extend:
       - forwarders: {{ dnsinfo.forwarders }}
       - records: {{ dnsinfo.zoneinfo.records }}
       - dnssec: {{ dnsinfo.dnssec|default(True) }}
-      - network: {{ pillar.network.get(domain) }}
+      - networks: {{ localnets }}
       - listen: {{ pillar.interfaces.get(domain).ip }}
       - master: {{ dnsinfo.master }}
       - slaves: {{ dnsinfo.slaves }}
