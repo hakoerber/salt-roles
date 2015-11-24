@@ -8,7 +8,7 @@ include:
 
 {% set logservers = [] %}
 
-{% set domains = pillar.interfaces.keys() %}
+{% set domains = pillar.get('interfaces', {}).keys() %}
 {% for domain in domains %}
 {% set domdata = pillar.domain.get(domain, {}) %}
 {% set domlogservers = domdata.get('applications', {}).get('logging', {}).get('servers', []) %}
