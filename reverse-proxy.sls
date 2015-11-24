@@ -6,6 +6,7 @@ include:
   - states.nginx.logging
   - states.nginx.conf
   - states.nginx.logrotate
+  - states.nginx.pki
 
 {% set reverse_proxy = pillar.get('applications', {}).get('reverse_proxy', {}) %}
 {% set upstream = reverse_proxy.get('upstream', {}) %}
@@ -23,3 +24,6 @@ extend:
       - reverse_proxy:
           protocol: {{ protocols }}
           upstream: {{ upstream }}
+  states.nginx.pki::params:
+    stateconf.set:
+      - master_dhparams: True
