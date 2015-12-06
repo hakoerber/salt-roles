@@ -17,6 +17,7 @@ include:
 extend:
   states.nginx.iptables::params:
     stateconf.set:
+      - ipv6: {{ ipv6 }}
       - public: {{ public }}
       - http: True
       - https: {{ 'https' in protocols }}
