@@ -6,6 +6,10 @@ include:
   - states.nginx.logging
   - states.nginx.iptables
 
+  - roles.firewall
+  - roles.logging.client
+  - roles.logging.local
+
 {% set content = {
   'protocol': 'http',
   'path': '/srv/www/packages',
