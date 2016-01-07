@@ -13,6 +13,8 @@ include:
 {% set protocols = reverse_proxy.get('protocols', {}) %}
 {% set public = reverse_proxy.get('public', {}) %}
 {% set ipv6 = reverse_proxy.get('ipv6', False) %}
+{% set simple_ssl = reverse_proxy.get('simple_ssl', False) %}
+{% set master_dhparams = reverse_proxy.get('master_dhparams', True) %}
 
 extend:
   states.nginx.iptables::params:
@@ -27,6 +29,9 @@ extend:
       - reverse_proxy:
           protocol: {{ protocols }}
           upstream: {{ upstream }}
+      - ssl:
+          simple: {{ simple_ssl }}
   states.nginx.pki::params:
     stateconf.set:
-      - master_dhparams: True
+      - master_dhparams: {{ master_dhparams }}
+      - fullchain: False
