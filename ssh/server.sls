@@ -4,13 +4,14 @@ include:
   - states.ssh.server
   - states.ssh.server.conf
   - states.ssh.server.keys
-{% if 'roles.logging.client' in salt['state.show_top']().get(env) %}
   - states.ssh.server.logging
-{% endif %}
+
+  - roles.logging.client
+  - roles.logging.local
+
 {% if grains['os_family'] != 'FreeBSD' %}
-{% if 'roles.firewall' in salt['state.show_top']().get(env) %}
   - states.ssh.server.iptables
-{% endif %}
+  - roles.firewall
 {% endif %}
 
 extend:

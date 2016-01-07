@@ -2,9 +2,12 @@
 
 include:
   - states.nginx
-  - states.nginx.iptables
-  - states.nginx.logging
   - states.nginx.conf
+  - states.nginx.logging
+  - states.nginx.iptables
+
+  - roles.logging.client
+  - roles.firewall
 
 {% set content = {
   'protocol': 'http',
