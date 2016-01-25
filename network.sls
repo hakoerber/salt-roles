@@ -41,12 +41,15 @@ def get_interfaces():
             else:
                 gateway= netinfo['default_gateway']
 
-
             new_interface.update({
                 'address': interface['ip'],
                 'netmask': netinfo['netmask'],
                 'gateway': gateway,
-                'nameservers': [nameserver['ip'] for nameserver in  dominfo['applications']['dns']['zoneinfo']['nameservers']]})
+                'nameservers': [nameserver['ip'] for nameserver in
+                                dominfo.get('applications', {})
+                                .get('dns', {})
+                                .get('zoneinfo', {})
+                                .get('nameservers', [])]})
         interfaces.append(new_interface)
     return interfaces
 
