@@ -10,7 +10,7 @@ include:
 
 {% set domains = pillar.get('interfaces', {}).keys() %}
 {% for domain in domains %}
-{% set domdata = pillar.domain.get(domain, {}) %}
+{% set domdata = pillar.get('domain', {}).get(domain, {}) %}
 {% set domlogservers = domdata.get('applications', {}).get('logging', {}).get('servers', []) %}
 {% for domlogserver in domlogservers %}
 {% do domlogserver.update({"domain":domain}) %}

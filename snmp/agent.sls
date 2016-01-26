@@ -10,8 +10,8 @@ include:
   - roles.logging.local
 
 {% set sysinfo = {
-  'location': pillar['machine']['location'],
-  'contact': pillar['machine']['contact'],
+  'location': pillar['machine'].get('location'),
+  'contact': pillar['machine'].get('contact'),
 } %}
 
 extend:
