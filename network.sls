@@ -64,6 +64,7 @@ def run():
         return config
     config['include'] = [
         'states.network',
+        'states.hostname',
     ]
 
     config['extend'] = {
@@ -72,6 +73,11 @@ def run():
                 {'hostname': get_hostname()},
                 {'ipv6': get_ipv6()},
                 {'interfaces': get_interfaces()}]
+        },
+        'states.hostname::params': {
+            'stateconf.set': [
+                {'hostname': get_hostname()},
+            ]
         },
     }
 
