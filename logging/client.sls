@@ -1,24 +1,19 @@
-#!stateconf
+#!py_c|stateconf -p
 
-include:
-  - states.rsyslog
-  - states.rsyslog.conf
-  - states.rsyslog.conf.client
-  - states.rsyslog.logrotate
+def get_logservers():
+    logservers = []
+    for domain in __pillar__.get('domains', []):
+        for logserver in domain['applications'].get('logging', {}).get('servers', []):
+            logserver.update({'domain': domain['name']})
+            logservers.append(logserver)
+    return logservers
 
-{% set logservers = [] %}
+def run():
+    config = prepare()
 
-{% set domains = pillar.get('interfaces', {}).keys() %}
-{% for domain in domains %}
-{% set domdata = pillar.get('domain', {}).get(domain, {}) %}
-{% set domlogservers = domdata.get('applications', {}).get('logging', {}).get('servers', []) %}
-{% for domlogserver in domlogservers %}
-{% do domlogserver.update({"domain":domain}) %}
-{% do logservers.append(domlogserver) %}
-{% endfor %}
-{% endfor %}
-
-extend:
-  states.rsyslog.conf.client::params:
-    stateconf.set:
-      - servers: {{ logservers }}
+    include('states.rsyslog', config)
+    include('states.rsyslog.conf', config)
+    include('states.rsyslog.conf.client', config,
+        servers=get_logservers())
+    include('states.rsyslog.logrotate', config)
+    return config

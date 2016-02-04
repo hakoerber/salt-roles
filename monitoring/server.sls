@@ -1,39 +1,57 @@
-#!stateconf
+#!py_c|stateconf -p
 
-{% set domain = pillar.applications.monitoring.server.domain %}
-{% set monitoring = pillar.domain.get(domain).applications.monitoring %}
+app = 'monitoring'
 
-{% set clients = [] %}
-{% for client in monitoring.clients %}
-{% do clients.append({
-  'name': client.name + '.' + domain,
-  'ip': client.ip,
-  'groups': [client.type],
-}) %}
-{% endfor %}
+def run():
+    config = prepare()
 
-{% set groups = [] %}
+    appcfg = appconf(app)
+    domcfg = appdom(appcfg)
+    appdomcfg = appdomconf(domcfg, app)
 
-{% set influxdb = pillar.applications.monitoring.server.database %}
+    clients = [
+        {'name': client['name'] + '.' + domcfg['name'],
+         'ip': client['ip'],
+         'groups': [client['type']]}
+        for client in appdomcfg['clients']]
+    dashboard_servers = appdomcfg.get('dashboards', False)
+    groups = []
+    contactgroups = []
+    influxdb = domcfg['applications']['metrics']['database']
+    contacts = [{
+        'name': 'hannes',
+        'email': 'hannes.koerber@lab.'},
+    ]
+    notifications = [{
+        'groups': ['all'],
+        'type': 'mail',
+    }]
 
-include:
-  - states.nagios
-  - states.nagios.selinux
-  - states.nagios.conf
+    include('states.nagios', config)
+    include('states.nagios.selinux', config)
+    include('states.nagios.conf', config)
 
-  - states.nagios.check_mk.server
-  - states.nagios.check_mk.server.livestatus
-  - states.nagios.check_mk.server.conf
-  - states.nagios.check_mk.server.iptables
+    include('states.nagios.check_mk.server', config)
+    include('states.nagios.check_mk.server.livestatus', config)
+    include('states.nagios.check_mk.server.livestatus.export', config,
+        allow_from=dashboard_servers)
+    include('states.nagios.check_mk.server.conf', config,
+        hosts=clients,
+        groups=groups)
+    include('states.nagios.check_mk.server.iptables', config)
+    include('states.nagios.check_mk.server.notifications', config,
+        contactgroups=contactgroups,
+        contacts=contacts,
+        notifications=notifications)
 
-  - states.nagios.graphios
-  - states.nagios.graphios.conf
+    include('states.nagios.graphios', config)
+    include('states.nagios.graphios.conf', config,
+        influxdb=influxdb)
 
-extend:
-  states.nagios.check_mk.server.conf::params:
-    stateconf.set:
-      - hosts: {{ clients }}
-      - groups: {{ groups }}
-  states.nagios.graphios.conf::params:
-    stateconf.set:
-      - influxdb: {{ influxdb }}
+    include('states.xinetd', config)
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
+
+    return config

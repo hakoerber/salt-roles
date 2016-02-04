@@ -1,29 +1,38 @@
-#!stateconf
+#!py_c|stateconf -p
 
-include:
-  - states.dhcpd
-  - states.dhcpd.conf
-  - states.dhcpd.iptables
-  - states.dhcpd.logging
+app = 'dhcp'
 
-{% set network = pillar.network.get(pillar.applications.dhcp.network) %}
-{% set dhcpinfo = network.applications.dhcp %}
+def run():
+    config = prepare()
 
-extend:
-  states.dhcpd.conf::params:
-    stateconf.set:
-      - network: {{ network }}
-      - role: {{ pillar.applications.dhcp.role }}
-      - primary: {{ dhcpinfo.failover.primary }}
-      - secondary: {{ dhcpinfo.failover.secondary }}
-      - range: {{ dhcpinfo.range }}
-      - reservations: {{ dhcpinfo.reservations }}
-      - nameservers: {{ pillar.domain.get(pillar.applications.dhcp.network).applications.dns.zoneinfo.nameservers }}
-      - ntpservers: {{ pillar.domain.get(pillar.applications.dhcp.network).applications.ntp.servers }}
-      - domain: {{ network.domain }}
-      - dhcpoptions: {{ dhcpinfo.options }}
-  states.dhcpd.iptables::params:
-    stateconf.set:
-      - role: {{ pillar.applications.dhcp.role }}
-      - primary: {{ dhcpinfo.failover.primary }}
-      - secondary: {{ dhcpinfo.failover.secondary }}
+    appcfg = appconf(app)
+    netcfg = appnet(appcfg)
+    domcfg = appdom(appcfg)
+    ifcfg = appif(appcfg)
+    appnetcfg = appnetconf(netcfg, app)
+
+    include('states.dhcpd', config)
+    include('states.dhcpd.conf', config,
+        network      = netcfg,
+        role         = appcfg['role'],
+        primary      = appnetcfg['failover']['primary'],
+        secondary    = appnetcfg['failover']['secondary'],
+        range        = appnetcfg['range'],
+        reservations = appnetcfg['reservations'],
+        nameservers  = domcfg['applications']['dns']['zoneinfo']['nameservers'],
+        ntpservers   = domcfg['applications']['ntp']['servers'],
+        domain       = domcfg['name'],
+        dhcpoptions  = appnetcfg['options']
+    )
+    include('states.dhcpd.iptables', config,
+        role         = appcfg['role'],
+        primary      = appnetcfg['failover']['primary'],
+        secondary    = appnetcfg['failover']['secondary']
+    )
+    include('states.dhcpd.logging', config)
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
+
+    return config

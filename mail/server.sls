@@ -1,23 +1,25 @@
-#!stateconf
+#!py_c|stateconf -p
 
-include:
-  - states.postfix
-  - states.postfix.conf
-  - states.postfix.iptables
+app = 'mail'
 
-{% set mail = pillar.get('applications', {}).get('mail', {}) %}
+def run():
+    config = prepare()
 
-{% set domain = mail['domain'] %}
-{% set subdomain = mail['subdomain'] %}
-{% set relay = mail.get('relay', {}) %}{% set aliases = mail.get('aliases', []) %}
-{% set domain_authorative = mail.get('domain_authorative', False) %}
+    appcfg = appconf(app)
 
-extend:
-  states.postfix.conf::params:
-    stateconf.set:
-      - listen_remote: True
-      - hostname: {{ subdomain }}.{{ domain }}
-      - domain: {{ domain }}
-      - relay: {{ relay }}
-      - aliases: {{ aliases }}
-      - domain_authorative: {{ domain_authorative }}
+    include('states.postfix', config)
+    include('states.postfix.conf', config,
+        listen_remote=True,
+        hostname=appcfg['subdomain'] + '.' + appcfg['domain'],
+        domain=appcfg['domain'],
+        relay=appcfg.get('relay', {}),
+        aliases=appcfg.get('aliases', []),
+        domain_authorative=appcfg.get('domain_authorative', False))
+    include('states.postfix.pki', config)
+    include('states.postfix.iptables', config)
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
+
+    return config

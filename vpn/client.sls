@@ -1,45 +1,43 @@
-#!py|stateconf -p
+#!py_c|stateconf -p
+
+from salt.exceptions import SaltRenderError
 
 def get_vpns():
-    vpns = {k: v for k, v in __pillar__.get('network', {}).items() if v.get('vpn')}
-    for vpnname, vpn in vpns.items():
-        vpn['devname'] = 'vpn-{}'.format(vpnname)
+    vpns = [net for net in __pillar__['networks'] if net.get('vpn')]
+    for vpn in vpns:
+        vpn['devname'] = 'vpn-{}'.format(vpn['name'])
+        for client in vpn['clients']:
+            print(client)
+            fqdn = client['name'] # + '.' + get_domain(None)['name']
+            client['name'] = fqdn
+            print(fqdn)
+            print(__grains__['id'])
+            if fqdn == __grains__['id']:
+                vpn['client'] = client
+                print(client)
+                break
+        if 'client' not in vpn.keys():
+            raise SaltRenderError("Client not found.")
     return vpns
 
 
 def run():
-    config = dict()
-    config['include'] = [
-        'states.openvpn',
-        'states.openvpn.client',
-        'states.openvpn.client.conf',
-        'states.openvpn.client.pki',
-        'states.openvpn.client.iptables',
-        'states.openvpn.client.logging',
-        'states.openvpn.client.routing',
-    ]
+    config = prepare()
 
     vpns = get_vpns()
 
-    config['extend'] = {
-        'states.openvpn.client::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.client.conf::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.client.pki::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.client.iptables::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.client.logging::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.client.routing::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-    }
+    print(vpns)
+
+    include('states.openvpn', config)
+    include('states.openvpn.client', config, vpns=vpns)
+    include('states.openvpn.client.conf', config, vpns=vpns)
+    include('states.openvpn.client.pki', config, vpns=vpns)
+    include('states.openvpn.client.iptables', config, vpns=vpns)
+    include('states.openvpn.client.logging', config, vpns=vpns)
+    include('states.openvpn.client.routing', config, vpns=vpns)
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
 
     return config

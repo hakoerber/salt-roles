@@ -1,31 +1,13 @@
-#!py|stateconf -p
-
-from salt.exceptions import SaltRenderError
-
-def get_hostname():
-    non_vpns = {domain: net for domain, net in __pillar__.get('network', {}).items() if not net.get('vpn', False)}
-    primary_domain = None
-    if len(non_vpns) == 0:
-        raise SaltRenderError("No domain specified.")
-    if len(non_vpns) == 1:
-        primary_domain = non_vpns.keys()[0]
-    else:
-        for domain, interface in non_vpns.items():
-            if interface.get('primary', False):
-                primary_domain = domain
-    if primary_domain is None:
-        raise SaltRenderError("No primary interface defined.")
-    return '{hostname}.{domain}'.format(
-        hostname=__pillar__['hostname'],
-        domain=primary_domain)
-
+#!py_c|stateconf -p
 
 def get_interfaces():
     interfaces = []
-    for domain, interface in __pillar__.get('interfaces', {}).items():
-        name = interface.get('identifier')
-        if name is None:
+    for interface in __pillar__['interfaces']:
+        if not interface.get('conf', True):
             continue
+        if interface.get('identifier') is None:
+            continue
+        name = interface.get('identifier')
         new_interface = {
             'name': name,
             'mac': interface['mac'],
@@ -33,17 +15,17 @@ def get_interfaces():
             'mode': interface['mode']}
 
         if interface['mode'] == 'static':
-            netinfo = __pillar__['network'].get(domain, {})
-            dominfo = __pillar__['domain'].get(domain, {})
+            netinfo = get_network(interface['network'])
+            dominfo = get_domain(netinfo['domain'])
 
             if 'gateway' in interface:
                 gateway = interface['gateway']
             else:
-                gateway= netinfo['default_gateway']
+                gateway= netinfo.get('default_gateway', None)
 
             new_interface.update({
                 'address': interface['ip'],
-                'netmask': netinfo['netmask'],
+                'netmask': netinfo.get('netmask', None),
                 'gateway': gateway,
                 'nameservers': [nameserver['ip'] for nameserver in
                                 dominfo.get('applications', {})
@@ -54,31 +36,21 @@ def get_interfaces():
     return interfaces
 
 
-def get_ipv6():
-    return __pillar__.get('network', {}).get('ipv6', False)
-
-
 def run():
-    config = dict()
+    config = prepare()
+
     if __grains__['os_family'] == 'FreeBSD':
         return config
-    config['include'] = [
-        'states.network',
-        'states.hostname',
-    ]
 
-    config['extend'] = {
-        'states.network::params': {
-            'stateconf.set': [
-                {'hostname': get_hostname()},
-                {'ipv6': get_ipv6()},
-                {'interfaces': get_interfaces()}]
-        },
-        'states.hostname::params': {
-            'stateconf.set': [
-                {'hostname': get_hostname()},
-            ]
-        },
-    }
+    primary_network = get_network(None)
+    primary_domain = get_domain(None)
+    hostname = '{0}.{1}'.format(__pillar__['hostname'], primary_domain['name'])
+
+
+    include('states.network', config,
+        hostname=hostname,
+        interfaces=get_interfaces())
+    include('states.hostname', config,
+        hostname=hostname)
 
     return config

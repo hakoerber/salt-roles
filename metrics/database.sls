@@ -1,20 +1,22 @@
-#!stateconf
+#!py_c|stateconf -p
 
-{% set domain = pillar['applications']['metrics']['database']['domain'] %}
-{% set clusterinfo = pillar['domain'][domain]['applications']['metrics']['database']['cluster'] %}
+app = 'metrics.database'
 
-{% set cluster = {
-  'nodes': clusterinfo['nodes']|map(attribute="name")|list|sort
-} %}
+def run():
+    config = prepare()
 
-include:
-  - states.influxdb
-  - states.influxdb.conf
-  - states.influxdb.iptables
+    appcfg = appconf(app)
+    domcfg = appdom(appcfg)
+    cluster = domcfg['applications']['metrics']['database']['cluster']
+    data = appcfg.get('data', True)
 
-extend:
-  states.influxdb.conf::params:
-    stateconf.set:
-      - domain: {{ domain }}
-      - cluster: {{ cluster }}
-      - data: {{ pillar.get('applications', {}).get('metrics', {}).get('database', {}).get('data', True) }}
+    include('states.influxdb', config)
+    include('states.influxdb.conf', config,
+        domain=domcfg['name'],
+        cluster=cluster,
+        data=data)
+    include('states.influxdb.iptables', config)
+
+    include('roles.firewall', config)
+
+    return config

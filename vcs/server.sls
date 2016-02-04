@@ -27,10 +27,10 @@ include:
 } %}
 
 extend:
-    states.nginx.iptables::params:
-      stateconf.set:
-        - http: {{ 'http' in protocols }}
-        - https: {{ 'https' in protocols }}
+  states.nginx.iptables::params:
+    stateconf.set:
+      - http: {{ 'http' in protocols }}
+      - https: {{ 'https' in protocols }}
   states.nginx.conf::params:
     stateconf.set:
       - group: git

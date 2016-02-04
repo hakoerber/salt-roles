@@ -1,36 +1,31 @@
-#!stateconf
-{% from 'roles/helpers/net.jinja' import localnets with context %}
+#!py_c|stateconf -p
 
-{% if grains['os_family'] != 'FreeBSD' %}
-include:
-  - states.iptables
-  - states.iptables.conf
-  - states.iptables.zones
-{% if 'roles.logging.client' in salt['state.show_top']().get(env) %}
-  - states.iptables.logging
-{% endif %}
+def get_zones():
+    zones = {
+        'public': {
+            'sources': ['0.0.0.0/0'],
+        },
+        'local': {
+            'sources': get_localnets(),
+        }
+    }
 
-{# extract zones from all networks #}
-{% set zones = {
-    'public': {
-      'sources': ['0.0.0.0/0'],
-    },
-    'local': {
-      'sources': localnets,
-    },
-  }
-%}
+    for network in __pillar__['networks']:
+        zones.update(network.get('zones', {}))
 
-{% set networks = pillar.get('interfaces', {}).keys() %}
-{% for network in networks %}
-{% set netdata = pillar.get('network', {}).get(network, {}) %}
+    return zones
 
-{# add explicit zones #}
-{% do zones.update(netdata.get('zones', {})) %}
-{% endfor %}
+def run():
+    config = prepare()
 
-extend:
-  states.iptables.zones::params:
-    stateconf.set:
-      - zones: {{ zones }}
-{% endif %}
+    if __grains__['os_family'] != 'FreeBSD':
+        include('states.iptables', config)
+        include('states.iptables.conf', config)
+        include('states.iptables.zones', config,
+            zones=get_zones())
+        include('states.iptables.logging', config)
+
+
+        include('roles.logging.client', config)
+        include('roles.logging.local', config)
+    return config

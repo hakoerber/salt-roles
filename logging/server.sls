@@ -1,12 +1,30 @@
-#!stateconf
+#!py_c|stateconf -p
 
-include:
-  - states.logstash
-  - states.logstash.iptables
+app = 'logging'
 
-{% set listeners = pillar.get('applications', {}).get('logging', {}).get('listeners', []) %}
+def run():
+    config = prepare()
 
-extend:
-  states.logstash.iptables::params:
-    stateconf.set:
-      - listeners: {{ listeners }}
+    appcfg = appconf(app)
+    domcfg = appdom(appcfg)
+    cluster = domcfg['applications']['logging']['database']['cluster']
+
+    listeners = appcfg['listeners']
+    outputs = [{
+        'type': 'elasticsearch',
+        'args': {
+            'hosts': [host['name'] for host in cluster['nodes']],
+            'index': 'logstash-%{+YYYY.MM.dd}'},
+        },
+    ]
+
+    include('states.logstash', config)
+    include('states.logstash.conf', config,
+        listeners=listeners,
+        outputs=outputs)
+    include('states.logstash.iptables', config,
+        listeners=listeners)
+
+    include('roles.firewall', config)
+
+    return config

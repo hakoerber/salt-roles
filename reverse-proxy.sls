@@ -1,37 +1,50 @@
-#!stateconf
+#!py_c|stateconf -p
 
-include:
-  - states.nginx
-  - states.nginx.iptables
-  - states.nginx.logging
-  - states.nginx.conf
-  - states.nginx.logrotate
-  - states.nginx.pki
+app = 'reverse_proxy'
 
-{% set reverse_proxy = pillar.get('applications', {}).get('reverse_proxy', {}) %}
-{% set upstream = reverse_proxy.get('upstream', {}) %}
-{% set protocols = reverse_proxy.get('protocols', {}) %}
-{% set public = reverse_proxy.get('public', {}) %}
-{% set ipv6 = reverse_proxy.get('ipv6', False) %}
-{% set simple_ssl = reverse_proxy.get('simple_ssl', False) %}
-{% set master_dhparams = reverse_proxy.get('master_dhparams', True) %}
+def run():
+    config = prepare()
 
-extend:
-  states.nginx.iptables::params:
-    stateconf.set:
-      - ipv6: {{ ipv6 }}
-      - public: {{ public }}
-      - http: True
-      - https: {{ 'https' in protocols }}
-  states.nginx.conf::params:
-    stateconf.set:
-      - ipv6: {{ ipv6 }}
-      - reverse_proxy:
-          protocol: {{ protocols }}
-          upstream: {{ upstream }}
-      - ssl:
-          simple: {{ simple_ssl }}
-  states.nginx.pki::params:
-    stateconf.set:
-      - master_dhparams: {{ master_dhparams }}
-      - fullchain: False
+    appcfg = appconf(app)
+    domcfg = appdom(appcfg)
+
+    acme_backend = domcfg['applications']['acme']['backend']
+
+    ssl_domains = []
+    for up in appcfg.get('upstream', {}):
+        ssl_domains.append({
+            "name": up['servername'],
+            "ssl_cert": up.get('ssl_cert', False)
+        })
+
+
+    include('states.nginx', config)
+    include('states.nginx.conf', config,
+        ipv6=appcfg.get('ipv6', False),
+        reverse_proxy={
+            'protocol': appcfg.get('protocols', []),
+            'upstream': appcfg.get('upstream', {})
+        },
+        ssl={
+            'simple': appcfg.get('simple_ssl', False)
+        },
+        acme_backend=acme_backend
+    )
+    include('states.nginx.iptables', config,
+        ipv6=appcfg.get('ipv6', False),
+        public=appcfg.get('public', False),
+        http=True,
+        https=('https' in appcfg.get('protocols', []))
+    )
+    include('states.nginx.logging', config)
+    include('states.nginx.logrotate', config)
+    include('states.nginx.pki', config,
+        master_dhparams=appcfg.get('master_dhparams', True),
+        domains=ssl_domains
+    )
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
+
+    return config

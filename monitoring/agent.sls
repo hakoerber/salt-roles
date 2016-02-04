@@ -1,32 +1,21 @@
-#!stateconf
+#!py_c|stateconf -p
 
-{% set conf_firewall = True %}
-{% if grains['os_family'] == 'FreeBSD' %}
-{% set conf_firewall = False %}
-{% endif %}
+def run():
+    config = prepare()
 
-include:
-  - states.nagios.check_mk.agent
-  - states.nagios.check_mk.agent.conf
-  {% if conf_firewall %}
-  - states.nagios.check_mk.agent.iptables
-  {% endif %}
+    servers = []
+    for domain in __pillar__['domains']:
+        servers.extend(domain.get('applications', {}).get('monitoring', {}).get('servers', []))
 
-{% set monitoring_servers = [] %}
+    include('states.nagios.check_mk.agent', config)
+    include('states.nagios.check_mk.agent.conf', config,
+        servers=servers)
+    if __grains__['os_family'] != 'FreeBSD':
+        include('states.nagios.check_mk.agent.iptables', config,
+            servers=servers)
 
-{% set domains = pillar.interfaces.keys() %}
-{% for domain in domains %}
-{% set domdata = pillar.domain.get(domain, {}) %}
-{% set dom_monitoring_servers = domdata.get('applications', {}).get('monitoring', {}).get('servers', []) %}
-{% do monitoring_servers.extend(dom_monitoring_servers) %}
-{% endfor %}
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
 
-extend:
-  states.nagios.check_mk.agent.conf::params:
-    stateconf.set:
-      - servers: {{ monitoring_servers }}
-  {% if conf_firewall %}
-  states.nagios.check_mk.agent.iptables::params:
-    stateconf.set:
-      - servers: {{ monitoring_servers }}
-  {% endif %}
+    return config

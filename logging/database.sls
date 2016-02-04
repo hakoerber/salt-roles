@@ -1,20 +1,21 @@
-#!stateconf
+#!py_c|stateconf -p
 
-{% set domain = pillar['applications']['logging']['database']['domain'] %}
-{% set clusterinfo = pillar['domain'][domain]['applications']['logging']['database']['cluster'] %}
+app = 'logging.database'
 
-{% set cluster = {
-  'name': clusterinfo['name'],
-  'nodes': clusterinfo['nodes']|map(attribute="name")|list|sort
-} %}
+def run():
+    config = prepare()
 
-include:
-  - states.elasticsearch
-  - states.elasticsearch.conf
-  - states.elasticsearch.iptables
+    appcfg = appconf(app)
+    domcfg = appdom(appcfg)
+    cluster = domcfg['applications']['logging']['database']['cluster']
+    data = appcfg.get('data', True)
 
-extend:
-  states.elasticsearch.conf::params:
-    stateconf.set:
-      - cluster: {{ cluster }}
-      - data: {{ pillar.get('applications', {}).get('logging', {}).get('database', {}).get('data', True) }}
+    include('states.elasticsearch', config)
+    include('states.elasticsearch.conf', config,
+        cluster=cluster,
+        data=data)
+    include('states.elasticsearch.iptables', config)
+
+    include('roles.firewall', config)
+
+    return config

@@ -1,23 +1,29 @@
-#!stateconf
+#!py_c|stateconf -p
 
-include:
-  - states.ntp
-  - states.ntp.conf
-  - states.ntp.iptables
-  - states.ntp.logging
+app = 'ntp'
 
-{% set domain = pillar.applications.ntp.domain %}
-{% set ntpinfo = pillar.domain.get(domain).applications.get('ntp', {}) %}
+def run():
+    config = prepare()
 
-extend:
-  states.ntp.conf::params:
-    stateconf.set:
-      - network: {{ pillar.network.get(domain) }}
-      - external_servers: {{ ntpinfo.get('external_servers') }}
-      - is_server: {{ pillar.applications.ntp.server|default(False) }}
-      - servers: {{ ntpinfo.servers }}
-      - authorative: {{ pillar.applications.ntp.authorative|default(True) }}
-      - authorative_servers: {{ ntpinfo.authorative_servers }}
-  states.ntp.iptables::params:
-    stateconf.set:
-      - is_server: {{ pillar.applications.ntp.server|default(False) }}
+    appcfg = appconf(app)
+    netcfg = appnet(appcfg)
+    domcfg = appdom(appcfg)
+    ifcfg = appif(appcfg)
+    appdomcfg = appdomconf(domcfg, app)
+
+    include('states.ntp', config)
+    include('states.ntp.conf', config,
+        network=netcfg,
+        external_servers=appdomcfg.get('external_servers'),
+        is_server=appcfg.get('server', False),
+        servers=appdomcfg['servers'],
+        authorative=appcfg.get('authorative', True),
+        authorative_servers=appdomcfg['authorative_servers'])
+    include('states.ntp.iptables', config,
+        is_server=appcfg.get('server', False))
+    include('states.ntp.logging', config)
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
+    return config

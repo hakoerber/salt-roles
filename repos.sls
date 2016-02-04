@@ -1,13 +1,15 @@
-#!py|stateconf -p
+#!py_c|stateconf -p
 
-def get_localrepos():
+def run():
+    config = prepare()
+
+    if __grains__['os_family'] != 'RedHat':
+        return config
+
     localmirrors = []
-    domains = pillar.get('interfaces', {}).keys()
-    for domain in domains:
-        domdata = pillar['domain'].get(domain, {})
-        dommirrors = domdata.get('applications', {}).get('localrepo', {}).get('servers', [])
-        for dommirror in dommirrors:
-            dommirror['domain'] = domain
+    for domain in __pillar__['domains']:
+        for dommirror in domain['applications'].get('localrepo', {}).get('servers', []):
+            dommirror['domain'] = domain['name']
             localmirrors.append(dommirror)
 
     # this is now a mapping from
@@ -32,22 +34,9 @@ def get_localrepos():
                     newmirror['domain'] = othermirror['domain']
                     mirrors.append(newmirror)
             localrepos[name]=mirrors
-    return localrepos
 
-def run():
-    config = dict()
-    if grains['os_family'] != 'RedHat':
-        return config
-
-    config['include'] = [
-        'states.repo.epel',
-        'states.repo.local',
-    ]
-
-    config['extend'] = {
-        'states.repo.local::params': {
-            'stateconf.set': [{'localrepos': get_localrepos()}]
-        },
-    }
+    include('states.repo.epel', config)
+    include('states.repo.local', config,
+        localrepos=localrepos)
 
     return config

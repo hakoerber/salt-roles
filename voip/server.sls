@@ -6,7 +6,7 @@ include:
   - states.murmur.iptables
   - states.murmur.pki
 
-{% set password = pillar.get('applications', {}).get('voip', {})['password'] %}
+{% set password = pillar['applications']['voip']['password'] %}
 
 extend:
   states.murmur.conf::params:

@@ -1,39 +1,38 @@
-#!stateconf
-{% from 'roles/helpers/net.jinja' import localnets with context %}
+#!py_c|stateconf -p
 
-include:
-  - states.bind
-  - states.bind.conf
-  - states.bind.zones
-  - states.bind.iptables
-  - states.bind.logging
-  - states.bind.logrotate
+app = 'dns'
 
-  - roles.firewall
-  - roles.logging.client
-  - roles.logging.local
+def run():
+    config = prepare()
 
-{% set domain = pillar.applications.dns.domain %}
-{% set domain_reverse = pillar.network.get(domain).domain_reverse %}
-{% set dnsinfo = pillar.domain.get(domain).applications.dns %}
+    appcfg = appconf(app)
+    netcfg = appnet(appcfg)
+    domcfg = appdom(appcfg)
+    ifcfg = appif(appcfg)
+    appdomcfg = appdomconf(domcfg, app)
 
-{% set params = [
-    {'nameservers': dnsinfo.zoneinfo.nameservers},
-    {'role': pillar.applications.dns.role},
-    {'mailservers': dnsinfo.zoneinfo.mailservers},
-    {'domain': domain},
-    {'domain_reverse': domain_reverse},
-    {'zoneinfo': dnsinfo.zoneinfo},
-    {'forwarders': dnsinfo.forwarders},
-    {'records': dnsinfo.zoneinfo.records},
-    {'dnssec': dnsinfo.dnssec|default(True)},
-    {'networks': localnets},
-    {'listen': pillar.interfaces.get(domain).ip},
-    {'master': dnsinfo.master},
-    {'slaves': dnsinfo.slaves},] %}
+    parameters = {
+        'role'          : appcfg['role'],
+        'domain'        : domcfg['name'],
+        'domain_reverse': netcfg['domain_reverse'],
+        'zoneinfo'      : appdomcfg['zoneinfo'],
+        'forwarders'    : appdomcfg['forwarders'],
+        'dnssec'        : appdomcfg.get('dnssec', True),
+        'listen'        : ifcfg['ip'],
+        'master'        : appdomcfg['master'],
+        'slaves'        : appdomcfg['slaves'],
+        'networks'      : get_localnets(),
+    }
 
-extend:
-  states.bind.conf::params:
-    stateconf.set: {{ params }}
-  states.bind.zones::params:
-    stateconf.set: {{ params }}
+    include('states.bind', config)
+    include('states.bind.conf', config, **parameters)
+    include('states.bind.zones', config, **parameters)
+    include('states.bind.iptables', config)
+    include('states.bind.logging', config)
+    include('states.bind.logrotate', config)
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
+
+    return config

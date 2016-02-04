@@ -1,41 +1,28 @@
-#!py|stateconf -p
+#!py_c|stateconf -p
+
+from salt.exceptions import SaltRenderError
 
 def get_vpns():
-    vpns = {k: v for k, v in __pillar__.get('network').items() if v.get('vpn')}
-    for vpnname, vpn in vpns.items():
-        vpn['devname'] = 'vpn-{}'.format(vpnname)
+    vpns = [net for net in __pillar__['networks'] if net.get('vpn')]
+    for vpn in vpns:
+        vpn['devname'] = 'vpn-{}'.format(vpn['name'])
     return vpns
 
 
 def run():
-    config = dict()
-    config['include'] = [
-        'states.openvpn',
-        'states.openvpn.server',
-        'states.openvpn.server.conf',
-        'states.openvpn.server.pki',
-        'states.openvpn.server.iptables',
-        'states.openvpn.server.logging',
-    ]
+    config = prepare()
 
     vpns = get_vpns()
 
-    config['extend'] = {
-        'states.openvpn.server::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.server.conf::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.server.pki::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.server.iptables::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-        'states.openvpn.server.logging::params': {
-            'stateconf.set': [{'vpns': vpns}]
-        },
-    }
+    include('states.openvpn', config)
+    include('states.openvpn.server', config, vpns=vpns)
+    include('states.openvpn.server.conf', config, vpns=vpns)
+    include('states.openvpn.server.pki', config, vpns=vpns)
+    include('states.openvpn.server.iptables', config, vpns=vpns)
+    include('states.openvpn.server.logging', config, vpns=vpns)
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
 
     return config
