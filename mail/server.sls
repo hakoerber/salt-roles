@@ -7,6 +7,8 @@ def run():
 
     appcfg = appconf(app)
 
+    ssl = appcfg.get('ssl', False)
+
     include('states.postfix', config)
     include('states.postfix.conf', config,
         listen_remote=True,
@@ -14,8 +16,12 @@ def run():
         domain=appcfg['domain'],
         relay=appcfg.get('relay', {}),
         aliases=appcfg.get('aliases', []),
-        domain_authorative=appcfg.get('domain_authorative', False))
-    include('states.postfix.pki', config)
+        domain_authorative=appcfg.get('domain_authorative', False),
+        ssl=ssl)
+    if ssl:
+        include('states.postfix.pki', config,
+            ssl=ssl,
+            master_dhparams=appcfg.get('master_dhparams'))
     include('states.postfix.iptables', config)
 
     include('roles.firewall', config)
