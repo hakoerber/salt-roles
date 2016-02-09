@@ -5,3 +5,10 @@ include:
 
   - states.grafana
   - states.grafana.iptables
+
+  - states.kibana
+  - states.kibana.iptables
+
+  - roles.firewall
+  - roles.logging.client
+  - roles.logging.local
