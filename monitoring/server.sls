@@ -17,7 +17,7 @@ def run():
     dashboard_servers = appdomcfg.get('dashboards', False)
     groups = []
     contactgroups = []
-    influxdb = domcfg['applications']['metrics']['database']
+    influxdb = domcfg['applications']['metrics']['database']['cluster']
     contacts = [{
         'name': 'hannes',
         'email': 'hannes.koerber@lab.'},
