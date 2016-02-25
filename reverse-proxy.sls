@@ -36,6 +36,8 @@ def run():
         http=True,
         https=('https' in appcfg.get('protocols', []))
     )
+    include('states.nginx.selinux', config,
+        network_connect=True)
     include('states.nginx.logging', config)
     include('states.nginx.logrotate', config)
     include('states.nginx.pki', config,
