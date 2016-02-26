@@ -6,4 +6,3 @@ include:
   - roles.logging.client
   - roles.firewall
   - roles.logging.local
-

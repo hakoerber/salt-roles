@@ -17,7 +17,6 @@ def run():
             "ssl_cert": up.get('ssl_cert', False)
         })
 
-
     include('states.nginx', config)
     include('states.nginx.conf', config,
         ipv6=appcfg.get('ipv6', False),

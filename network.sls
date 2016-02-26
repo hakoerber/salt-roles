@@ -35,7 +35,6 @@ def get_interfaces():
         interfaces.append(new_interface)
     return interfaces
 
-
 def run():
     config = prepare()
 
@@ -45,7 +44,6 @@ def run():
     primary_network = get_network(None)
     primary_domain = get_domain(None)
     hostname = '{0}.{1}'.format(__pillar__['hostname'], primary_domain['name'])
-
 
     include('states.network', config,
         hostname=hostname,

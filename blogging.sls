@@ -23,4 +23,3 @@ extend:
     stateconf.set:
       - group: hexo
       - static_content: {{ content }}
-

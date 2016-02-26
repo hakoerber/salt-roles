@@ -8,7 +8,6 @@ def get_vpns():
         vpn['devname'] = 'vpn-{}'.format(vpn['name'])
     return vpns
 
-
 def run():
     config = prepare()
 

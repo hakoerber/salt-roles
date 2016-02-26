@@ -25,7 +25,6 @@ def run():
             zones=get_zones())
         include('states.iptables.logging', config)
 
-
         include('roles.logging.client', config)
         include('roles.logging.local', config)
     return config

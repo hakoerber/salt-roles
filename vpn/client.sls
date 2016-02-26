@@ -20,7 +20,6 @@ def get_vpns():
             raise SaltRenderError("Client not found.")
     return vpns
 
-
 def run():
     config = prepare()
 

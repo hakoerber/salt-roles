@@ -17,4 +17,3 @@ extend:
   states.users.dotfiles::params:
     stateconf.set:
       - users: {{ users }}
-

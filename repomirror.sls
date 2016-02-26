@@ -25,4 +25,3 @@ extend:
   states.nginx.conf::params:
     stateconf.set:
       - static_content: {{ content }}
-

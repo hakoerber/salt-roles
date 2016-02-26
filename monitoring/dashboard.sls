@@ -34,4 +34,3 @@ def run():
     include('roles.logging.local', config)
 
     return config
-
