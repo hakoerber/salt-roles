@@ -14,3 +14,4 @@ extend:
     stateconf.set:
       - group: {{ group }}
       - group_nopw: {{ group_nopw }}
+      - policies: {{ pillar.get('applications', {}).get('sudo', {}).get('policies', []) }}
