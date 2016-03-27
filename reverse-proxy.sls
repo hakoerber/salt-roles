@@ -13,7 +13,7 @@ def run():
     ssl_domains = []
     for up in appcfg.get('upstream', {}):
         ssl_domains.append({
-            "name": up['servername'],
+            "names": up['servernames'],
             "ssl_cert": up.get('ssl_cert', False)
         })
 
