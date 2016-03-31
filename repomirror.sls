@@ -1,27 +1,29 @@
-#!stateconf
+#!py_c|stateconf -p
 
-include:
-  - states.nginx
-  - states.nginx.conf
-  - states.nginx.logging
-  - states.nginx.iptables
+app = 'localrepo'
 
-  - roles.firewall
-  - roles.logging.client
-  - roles.logging.local
+def run():
+    config = prepare()
 
-{% set content = {
-  'protocol': 'http',
-  'path': '/srv/www/packages',
-  'autoindex': True,
-} %}
+    appcfg = appconf(app)
 
-extend:
-  states.nginx.iptables::params:
-    stateconf.set:
-      - public: True
-      - http: True
-      - https: False
-  states.nginx.conf::params:
-    stateconf.set:
-      - static_content: {{ content }}
+    content = {
+        'path': appcfg['path'],
+        'protocol': 'http',
+        'autoindex': True,
+    }
+
+    include('states.nginx', config)
+    include('states.nginx.conf', config,
+        static_content=content)
+    include('states.nginx.logging', config)
+    include('states.nginx.iptables', config,
+        public=True,
+        http=True,
+        https=False)
+
+    include('roles.firewall', config)
+    include('roles.logging.client', config)
+    include('roles.logging.local', config)
+
+    return config
