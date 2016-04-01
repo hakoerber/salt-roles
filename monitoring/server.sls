@@ -18,10 +18,7 @@ def run():
     groups = []
     contactgroups = []
     influxdb = domcfg['applications']['metrics']['database']['cluster']
-    contacts = [{
-        'name': 'hannes',
-        'email': 'hannes.koerber@lab.'},
-    ]
+    contacts = appcfg['contacts']
     notifications = [{
         'groups': ['all'],
         'type': 'mail',
