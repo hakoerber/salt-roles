@@ -22,6 +22,14 @@ def run():
         http=True,
         https=False)
 
+    include('states.syncrepo', config)
+    include('states.syncrepo.conf', config,
+        base=appcfg['mirror']['base'],
+        repos=appcfg['mirror']['repos'])
+    include('states.syncrepo.cron', config,
+        minute=appcfg['mirror']['cron']['minute'],
+        hour=appcfg['mirror']['cron']['hour'])
+
     include('roles.firewall', config)
     include('roles.logging.client', config)
     include('roles.logging.local', config)
