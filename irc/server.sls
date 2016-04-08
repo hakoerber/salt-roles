@@ -7,6 +7,7 @@ def run():
     include('states.quassel.core.conf', config)
     include('states.quassel.core.tls', config)
     include('states.quassel.core.iptables', config)
+    include('states.quassel.core.logging', config)
 
     include('roles.firewall', config)
 
