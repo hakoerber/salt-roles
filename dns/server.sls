@@ -11,11 +11,16 @@ def run():
     ifcfg = appif(appcfg)
     appdomcfg = appdomconf(domcfg, app)
 
+    zoneinfo = appdomcfg['zoneinfo']
+    for record in zoneinfo['records']:
+        if record['hostname'] not in record['dns']['arecords']:
+            record['dns']['arecords'].append(record['hostname'])
+
     parameters = {
         'role'          : appcfg['role'],
         'domain'        : domcfg['name'],
         'domain_reverse': netcfg['domain_reverse'],
-        'zoneinfo'      : appdomcfg['zoneinfo'],
+        'zoneinfo'      : zoneinfo,
         'forwarders'    : appdomcfg['forwarders'],
         'dnssec'        : appdomcfg.get('dnssec', True),
         'listen'        : ifcfg['ip'],
