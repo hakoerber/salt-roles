@@ -9,20 +9,38 @@ def run():
 
     ssl = appcfg.get('ssl', False)
 
+    args = {}
+
+    if appcfg.get('submit'):
+        args['submit']={
+            'auth': {
+                'type': 'dovecot',
+                'socket': '/var/run/dovecot-auth'
+            },
+            'public': appcfg['submit'].get('public', False)
+        }
+
     include('states.postfix', config)
     include('states.postfix.conf', config,
         listen_remote=True,
         hostname=appcfg['subdomain'] + '.' + appcfg['domain'],
         domain=appcfg['domain'],
-        relay=appcfg.get('relay', {}),
+        relay=appcfg.get('relay', 'null'),
         aliases=appcfg.get('aliases', []),
         domain_authorative=appcfg.get('domain_authorative', False),
-        ssl=ssl)
+        ssl=ssl,
+        accept=appcfg['accept'],
+        lmtp_relay={
+            'socket': '/var/run/lmtp.sock'
+        },
+        **args
+        )
     if ssl:
         include('states.postfix.pki', config,
             ssl=ssl,
             master_dhparams=appcfg.get('master_dhparams'))
-    include('states.postfix.iptables', config)
+    include('states.postfix.iptables', config,
+        **args)
 
     include('roles.firewall', config)
     include('roles.logging.client', config)
