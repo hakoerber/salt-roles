@@ -25,7 +25,6 @@ def run():
         listen_remote=True,
         hostname=appcfg['subdomain'] + '.' + appcfg['domain'],
         domain=appcfg['domain'],
-        relay=appcfg.get('relay', 'null'),
         aliases=appcfg.get('aliases', []),
         domain_authorative=appcfg.get('domain_authorative', False),
         ssl=ssl,
@@ -33,6 +32,7 @@ def run():
         lmtp_relay={
             'socket': '/var/run/lmtp.sock'
         },
+        relay_subnet=appcfg.get('relay_subnet', False),
         **args
         )
     if ssl:
