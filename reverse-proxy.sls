@@ -22,7 +22,8 @@ def run():
         ipv6=appcfg.get('ipv6', False),
         reverse_proxy={
             'protocol': appcfg.get('protocols', []),
-            'upstream': appcfg.get('upstream', {})
+            'upstream': appcfg.get('upstream', {}),
+            'force_https': appcfg.get('force_https', False)
         },
         ssl={
             'simple': appcfg.get('simple_ssl', False)
