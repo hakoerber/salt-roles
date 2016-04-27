@@ -1,17 +1,19 @@
 #!py_c|stateconf -p
 
 def get_zones():
-    zones = {
-        'public': {
+    zones = [
+        {
+            'name': 'public',
             'sources': ['0.0.0.0/0'],
         },
-        'local': {
+        {
+            'name': 'local',
             'sources': get_localnets(),
         }
-    }
+    ]
 
     for network in __pillar__['networks']:
-        zones.update(network.get('zones', {}))
+        zones.extend(network.get('zones', []))
 
     return zones
 
