@@ -19,6 +19,7 @@ def run():
     include('states.openvpn.server.pki', config, vpns=vpns)
     include('states.openvpn.server.iptables', config, vpns=vpns)
     include('states.openvpn.server.logging', config, vpns=vpns)
+    include('states.openvpn.server.routing', config)
 
     include('roles.firewall', config)
     include('roles.logging.client', config)
