@@ -28,7 +28,8 @@ def run():
         ssl={
             'simple': appcfg.get('simple_ssl', False)
         },
-        acme_backend=acme_backend
+        acme_backend=acme_backend,
+        resolver='127.0.0.1'
     )
     include('states.nginx.iptables', config,
         ipv6=appcfg.get('ipv6', False),
@@ -43,6 +44,14 @@ def run():
     include('states.nginx.pki', config,
         master_dhparams=appcfg.get('master_dhparams', True),
         domains=ssl_domains
+    )
+
+    include('states.dnsmasq', config)
+    include('states.dnsmasq.user', config)
+    include('states.dnsmasq.conf.local', config,
+        domain_overrides=appcfg.get('domain_overrides', []),
+        read_hostsfile=False,
+        read_resolv=True
     )
 
     include('roles.firewall', config)
